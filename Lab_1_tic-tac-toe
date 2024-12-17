@@ -1,0 +1,80 @@
+import random
+
+# Initialize the board
+board = [str(i) for i in range(1, 10)]
+
+# Display the board
+def display_board():
+    print(f"{board[0]} | {board[1]} | {board[2]}")
+    print("--+---+--")
+    print(f"{board[3]} | {board[4]} | {board[5]}")
+    print("--+---+--")
+    print(f"{board[6]} | {board[7]} | {board[8]}")
+
+# Check if a player has won
+def check_winner(player):
+    win_combinations = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
+        [0, 4, 8], [2, 4, 6]              # Diagonals
+    ]
+    for combination in win_combinations:
+        if all(board[i] == player for i in combination):
+            return True
+    return False
+
+# Check if the move is valid
+def is_valid_move(position):
+    return board[position - 1] not in ['X', 'O']
+
+# User move
+def user_move():
+    while True:
+        try:
+            position = int(input("Enter your move (1-9): "))
+            if position in range(1, 10) and is_valid_move(position):
+                board[position - 1] = 'X'
+                break
+            else:
+                print("Invalid move. Try again.")
+        except ValueError:
+            print("Please enter a valid number.")
+
+# Computer move
+def computer_move():
+    empty_cells = [i for i in range(1, 10) if board[i - 1] not in ['X', 'O']]
+    if not empty_cells:
+        return
+    move = random.choice(empty_cells)
+    board[move - 1] = 'O'
+
+# Main game function
+def play_game():
+    global board
+    board = [str(i) for i in range(1, 10)]  # Reset the board
+    current_player = random.choice(['user', 'computer'])
+    print(f"{current_player.capitalize()} plays first!")
+
+    for _ in range(9):  # Maximum of 9 moves
+        display_board()
+        if current_player == 'user':
+            user_move()
+            if check_winner('X'):
+                display_board()
+                print("User wins!")
+                return
+            current_player = 'computer'
+        else:
+            computer_move()
+            if check_winner('O'):
+                display_board()
+                print("Computer wins!")
+                return
+            current_player = 'user'
+    
+    display_board()
+    print("It's a tie!")
+
+# Run the game
+if __name__ == "__main__":
+    play_game()
