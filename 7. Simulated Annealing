@@ -1,0 +1,38 @@
+importrandom import math
+defcount_attacks(queen_positions): attack_count = 0
+size=len(queen_positions) for i in range(size):
+forjinrange(i+1,size):
+ifqueen_positions[i]==queen_positions[j]: attack_count += 1
+ifabs(queen_positions[i]-queen_positions[j])==abs(i-j): attack_count += 1
+returnattack_count
+defgenerate_random_move(current_positions): new_state = current_positions[:]
+column_to_change=random.randint(0,len(current_positions)-1) new_row_position=random.randint(0,len(current_positions)-1) new_state[column_to_change] = new_row_position
+returnnew_state
+def annealing_search(board_size, initial_configuration): current_positions = initial_configuration[:] current_attack_count=count_attacks(current_positions) temp = 1000
+min_temp=0.0001
+cooling_factor=0.99
+step_count = 0 visited_states=set()
+whiletemp>min_tempandcurrent_attack_count>0: step_count += 1
+
+#ifstep_count%150== 0:
+#print("Step",step_count,":Attacks=",current_attack_count) new_positions = generate_random_move(current_positions) new_positions_tuple = tuple(new_positions)
+ifnew_positions_tupleinvisited_states: continue
+ 
+visited_states.add(new_positions_tuple) new_attack_count=count_attacks(new_positions)
+energy_difference=new_attack_count-current_attack_count
+
+ifenergy_difference<0orrandom.random()<math.exp(-energy_difference/temp): current_positions, current_attack_count = new_positions, new_attack_count
+temp*=cooling_factor
+ifcurrent_attack_count==0:
+print("Solutionfoundafter",step_count,"steps!") break
+return current_positions, current_attack_count board_size=int(input("Enterthesizeoftheboard(N):")) initial_input = input("Enter the initial configuration: ")
+initial_queen_positions=[int(pos)forposininitial_input.strip('[]').split(',')]
+
+iflen(initial_queen_positions)!=board_size:
+print("Error:Theinitialconfigurationmustcontainexactly",board_size,"integers.") else:
+solution,conflicts=annealing_search(board_size,initial_queen_positions)
+
+if conflicts == 0: print("Solutionfound!")
+print("Finalboardconfiguration:",solution) else:
+print("Nosolutionfound.Finalconflictcount:",conflicts)
+
