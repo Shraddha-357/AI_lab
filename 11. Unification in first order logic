@@ -1,0 +1,107 @@
+import random
+import itertools
+import math
+
+def occurs_check(var, term):
+    """Checks if a variable occurs in a term."""
+    if isinstance(term, str):  # Term is a constant
+        return False
+    elif isinstance(term, tuple):  # Term is a function (represented as a tuple)
+        # Recursively check the function arguments
+        if term[0] == var: 
+            return True
+        return any(occurs_check(var, arg) for arg in term[1:])
+    return False
+
+def unify(psi1, psi2, subst=None):
+    """Unify two terms psi1 and psi2 with the current substitution."""
+    if subst is None:
+        subst = {}
+
+    # Step 1: If either term is a variable or constant
+    if isinstance(psi1, str):  # psi1 is a variable
+        if psi1 == psi2:  # Identical variables
+            return subst
+        elif psi1 in subst:  # psi1 already has a substitution
+            return unify(subst[psi1], psi2, subst)
+        elif occurs_check(psi1, psi2):  # Occurs check
+            return "FAILURE"
+        else:
+            subst[psi1] = psi2  # Create a new substitution
+            return subst
+
+    elif isinstance(psi2, str):  # psi2 is a variable
+        if psi2 == psi1:  # Identical variables
+            return subst
+        elif psi2 in subst:  # psi2 already has a substitution
+            return unify(psi1, subst[psi2], subst)
+        elif occurs_check(psi2, psi1):  # Occurs check
+            return "FAILURE"
+        else:
+            subst[psi2] = psi1  # Create a new substitution
+            return subst
+
+    # Step 2: Check if the initial predicates symbols match
+    if isinstance(psi1, tuple) and isinstance(psi2, tuple):
+        if psi1[0] != psi2[0]:  # Predicate symbols don't match
+            return "FAILURE"
+
+    # Step 3: Check if they have the same number of arguments
+    if isinstance(psi1, tuple) and isinstance(psi2, tuple):
+        if len(psi1) != len(psi2):  # Different number of arguments
+            return "FAILURE"
+
+    # Step 4: Initialize the substitution set (already initialized as `subst`)
+    # Step 5: Iterate through the arguments of psi1 and psi2
+    if isinstance(psi1, tuple) and isinstance(psi2, tuple):
+        for arg1, arg2 in zip(psi1[1:], psi2[1:]):  # Recursively unify the arguments
+            result = unify(arg1, arg2, subst)
+            if result == "FAILURE":
+                return "FAILURE"
+            elif result != subst:
+                subst = result  # Update the substitution set
+
+    # Step 6: Return the final substitution set
+    return subst
+
+# Helper function to display the substitution in a readable format
+def print_substitution(subst):
+    if subst == "FAILURE":
+        print("FAILURE")
+    else:
+        for var, val in subst.items():
+            print(f"{var} -> {val}")
+
+# Helper function to parse the user input into the required format
+def parse_input(input_str):
+    """Parse the input string into a tuple representing the term."""
+    input_str = input_str.strip()
+    if '(' in input_str and ')' in input_str:
+        # Extract the predicate and arguments
+        predicate, args = input_str.split('(', 1)
+        args = args.rstrip(')').split(',')
+        args = [parse_input(arg.strip()) if '(' in arg else arg.strip() for arg in args]
+        return (predicate.strip(), *args)
+    else:
+        # Single term, assume it's a constant or a variable
+        return input_str.strip()
+
+# Main function to handle user input and unification
+def main():
+    print("Please enter the first term (e.g., f(X, g(Y))):")
+    term1 = input().strip()
+
+    print("Please enter the second term (e.g., f(a, g(b))):")
+    term2 = input().strip()
+
+    # Parse the user input into structured terms
+    psi1 = parse_input(term1)
+    psi2 = parse_input(term2)
+
+    # Unify the terms and print the result
+    substitution = unify(psi1, psi2)
+    print_substitution(substitution)
+
+# Run the main function
+if __name__ == "__main__":
+    main()
