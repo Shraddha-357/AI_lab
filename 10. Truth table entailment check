@@ -1,0 +1,53 @@
+import random
+import itertools
+import math
+
+def eval_formula(formula, assignment):
+    """Evaluates a logical formula given a truth assignment."""
+    # Replace logical operators in the formula to Python equivalents
+    formula = formula.replace('and', 'and').replace('or', 'or').replace('not', 'not')
+    formula = formula.replace('→', 'or not')  # Implication A → B is equivalent to (not A or B)
+    formula = formula.replace('↔', '==')  # Equivalence A ↔ B is equivalent to (A == B)
+
+    # Create a dictionary environment with variable assignments
+    env = {var: value for var, value in zip(assignment.keys(), assignment.values())}
+    return eval(formula, {}, env)
+
+def generate_initial_state(variables):
+    """Generates a random initial truth assignment for the given variables."""
+    return {var: random.choice([True, False]) for var in variables}
+
+def entails(KB, alpha):
+    """Checks if the knowledge base (KB) entails the formula alpha."""
+    # Find all unique variables in KB and alpha
+    variables = set(''.join([ch for ch in ''.join(KB + [alpha]) if ch.isalpha()]))
+
+    # Generate all possible truth assignments for the variables
+    truth_assignments = list(itertools.product([True, False], repeat=len(variables)))
+    var_list = list(variables)
+
+    for assignment in truth_assignments:
+        # Map the truth assignment to each variable in the assignment
+        assignment_dict = dict(zip(var_list, assignment))
+
+        # Combine all KB formulas with AND and evaluate
+        kb_combined = all(eval_formula(formula, assignment_dict) for formula in KB)
+        alpha_true = eval_formula(alpha, assignment_dict)
+
+        # If KB is true and alpha is false for any assignment, KB does not entail alpha
+        if kb_combined and not alpha_true:
+            return False
+
+    # If we reach here, it means KB entails alpha
+    return True
+
+# Example usage:
+KB = ["not Q or P", "not P or (not Q)", "Q or R"]
+alpha = "R"
+
+# Check if KB entails alpha
+if entails(KB, alpha):
+    print("KB entails R")
+else:
+    print("KB does not entail R")
+
