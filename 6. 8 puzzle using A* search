@@ -1,0 +1,102 @@
+import heapq
+
+# Function to print the 8-puzzle grid
+def print_puzzle(state):
+    for i in range(3):
+        print(state[i * 3:(i + 1) * 3])
+    print()
+
+# Function to find the position of the blank (0)
+def find_blank(state):
+    return state.index(0)
+
+# Function to generate possible moves from the current state
+def generate_moves(state):
+    blank_pos = find_blank(state)
+    moves = []
+    
+    # Define possible moves (row, column offsets)
+    possible_directions = {
+        "up": -3,    # Move blank up
+        "down": 3,   # Move blank down
+        "left": -1,  # Move blank left
+        "right": 1   # Move blank right
+    }
+    
+    # Conditions to avoid invalid moves
+    if blank_pos % 3 == 0:  # Left column
+        possible_directions.pop("left")
+    if blank_pos % 3 == 2:  # Right column
+        possible_directions.pop("right")
+    if blank_pos < 3:       # Top row
+        possible_directions.pop("up")
+    if blank_pos > 5:       # Bottom row
+        possible_directions.pop("down")
+    
+    # Generate new states based on valid moves
+    for direction, offset in possible_directions.items():
+        new_pos = blank_pos + offset
+        new_state = list(state)
+        # Swap blank with the new position
+        new_state[blank_pos], new_state[new_pos] = new_state[new_pos], new_state[blank_pos]
+        moves.append(new_state)
+    
+    return moves
+
+# Misplaced tiles heuristic (h)
+def misplaced_tiles(state, goal_state):
+    return sum(1 for i in range(9) if state[i] != goal_state[i] and state[i] != 0)
+
+# A* Search for 8-puzzle
+def a_star_search(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (0 + misplaced_tiles(start, goal), start))  # (f, state)
+    g_costs = {tuple(start): 0}
+    parent_map = {tuple(start): None}
+    
+    while open_list:
+        _, current_state = heapq.heappop(open_list)
+        
+        # If goal state is reached
+        if current_state == goal:
+            return reconstruct_path(current_state, parent_map)
+        
+        # Generate valid moves
+        for neighbor in generate_moves(current_state):
+            g = g_costs[tuple(current_state)] + 1
+            h = misplaced_tiles(neighbor, goal)
+            f = g + h
+            
+            if tuple(neighbor) not in g_costs or g < g_costs[tuple(neighbor)]:
+                g_costs[tuple(neighbor)] = g
+                heapq.heappush(open_list, (f, neighbor))
+                parent_map[tuple(neighbor)] = current_state
+
+    return "No solution"
+
+# Reconstruct the solution path
+def reconstruct_path(goal_state, parent_map):
+    path = []
+    while goal_state:
+        path.append(goal_state)
+        goal_state = parent_map[tuple(goal_state)]
+    return path[::-1]
+
+# Example usage
+start_state = [1, 2, 3, 4, 0, 5, 6, 7, 8]  # Initial state
+goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]   # Goal state
+
+print("Initial State:")
+print_puzzle(start_state)
+
+solution_path = a_star_search(start_state, goal_state)
+
+if solution_path != "No solution":
+    print("Solution path found:")
+    for state in solution_path:
+        print_puzzle(state)
+        # Calculate and display the heuristic value for each state
+        print(f"Heuristic (Misplaced Tiles): {misplaced_tiles(state, goal_state)}\n")
+else:
+    print("No solution found.")
+
