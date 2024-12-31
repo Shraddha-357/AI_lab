@@ -1,0 +1,73 @@
+import random
+
+def calculate_conflicts(board):
+    """Calculates the number of pairs of queens attacking each other."""
+    conflicts = 0
+    n = len(board)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if board[i] == board[j] or abs(board[i] - board[j]) == abs(i - j):
+                conflicts += 1
+    return conflicts
+
+def get_neighbors(board):
+    """Generates neighboring boards by swapping two queens."""
+    neighbors = []
+    n = len(board)
+    for i in range(n):
+        for j in range(i + 1, n):
+            new_board = board[:]
+            new_board[i], new_board[j] = new_board[j], new_board[i]  # Swap queens
+            neighbors.append(new_board)
+    return neighbors
+
+def hill_climbing(board):
+    """Solves the N-Queens problem using the Hill Climbing algorithm."""
+    current_conflicts = calculate_conflicts(board)
+    print(f"Initial board: {board} with {current_conflicts} conflicts")
+
+    while True:
+        neighbors = get_neighbors(board)
+        next_board = None
+        next_conflicts = current_conflicts
+        
+        for neighbor in neighbors:
+            conflicts = calculate_conflicts(neighbor)
+            if conflicts < next_conflicts:
+                next_conflicts = conflicts
+                next_board = neighbor
+
+        if next_conflicts >= current_conflicts:  # If no improvement, stop
+            break
+
+        board = next_board
+        current_conflicts = next_conflicts
+        print(f"Intermediate board: {board} with {current_conflicts} conflicts")
+
+    return board, current_conflicts
+
+# Input and solving
+try:
+    n = int(input("Enter the number of queens (size of the board): "))
+    if n <= 0:
+        raise ValueError("The number of queens must be a positive integer.")
+
+    board = []
+    for i in range(n):
+        row = int(input(f"Enter the row index for queen {i + 1} (0 to {n - 1}): "))
+        if row < 0 or row >= n:
+            raise ValueError("Invalid row index. Must be within the range 0 to n-1.")
+        board.append(row)
+
+    solution, conflicts = hill_climbing(board)
+
+    if conflicts == 0:
+        print("Solution found:")
+        print(solution)
+    else:
+        print("No solution found, best configuration with conflicts:")
+        print(solution, "with", conflicts, "conflicts.")
+
+except ValueError as e:
+    print(f"Invalid input: {e}")
+
