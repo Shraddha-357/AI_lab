@@ -1,0 +1,77 @@
+import heapq
+
+# Function to evaluate the heuristic (number of attacking pairs of queens)
+def evaluate_heuristic(state):
+    attacks = 0
+    for i in range(8):
+        for j in range(i + 1, 8):
+            if state[i] == state[j] or abs(state[i] - state[j]) == j - i:
+                attacks += 1
+    return attacks
+
+# Function to generate neighbors (states) by moving one queen in each column
+def generate_neighbors(state):
+    neighbors = []
+    for i in range(8):
+        for j in range(8):
+            if state[i] != j:
+                new_state = state[:]
+                new_state[i] = j
+                neighbors.append(new_state)
+    return neighbors
+
+# Function to print the board in a readable format
+def print_board(state):
+    board = []
+    for row in state:
+        row_rep = ["."] * 8
+        row_rep[row] = "Q"
+        board.append(" ".join(row_rep))
+    for row in board:
+        print(row)
+    print()
+
+# A* Search algorithm for 8-Queens
+def a_star_8_queens():
+    initial_state = [0, 1, 2, 3, 4, 5, 6, 7]  # Random initial state, queens in columns 0 to 7
+    
+    # Priority queue for A* search (f(n), g(n), state)
+    pq = []
+    heapq.heappush(pq, (evaluate_heuristic(initial_state), 0, initial_state))
+    
+    visited = set()  # To avoid revisiting states
+    
+    while pq:
+        # Pop the state with the lowest f(n) = g(n) + h(n)
+        h_value, g_value, current_state = heapq.heappop(pq)
+        
+        print(f"Evaluating state with f(n)={g_value + h_value} (g(n)={g_value}, h(n)={h_value})")
+        print_board(current_state)
+        
+        # If we find a solution where no queens are attacking each other (h(n) == 0)
+        if h_value == 0:
+            print("Solution found!")
+            return current_state
+        
+        # Generate neighbors
+        neighbors = generate_neighbors(current_state)
+        
+        for neighbor in neighbors:
+            if tuple(neighbor) not in visited:
+                visited.add(tuple(neighbor))
+                h_neighbor = evaluate_heuristic(neighbor)
+                g_neighbor = g_value + 1  # Cost is simply the depth or number of moves
+                f_neighbor = g_neighbor + h_neighbor
+                heapq.heappush(pq, (h_neighbor, g_neighbor, neighbor))
+    
+    print("No solution found.")
+    return None
+
+# Run the A* algorithm
+solution = a_star_8_queens()
+
+if solution:
+    print("Final solution:")
+    print_board(solution)
+else:
+    print("No solution found.")
