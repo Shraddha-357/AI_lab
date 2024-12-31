@@ -1,0 +1,85 @@
+from copy import deepcopy
+
+# Function to calculate Manhattan distance
+def manhattan_distance(state, goal_state):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] != 0:  # Ignore the blank tile
+                x_goal, y_goal = divmod(goal_state.index(state[i][j]), 3)
+                distance += abs(i - x_goal) + abs(j - y_goal)
+    return distance
+
+# Function to find neighbors (valid moves)
+def generate_neighbors(state):
+    neighbors = []
+    blank_x, blank_y = [(i, j) for i in range(3) for j in range(3) if state[i][j] == 0][0]
+    moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Right, Left, Down, Up
+
+    for dx, dy in moves:
+        new_x, new_y = blank_x + dx, blank_y + dy
+        if 0 <= new_x < 3 and 0 <= new_y < 3:
+            new_state = deepcopy(state)
+            new_state[blank_x][blank_y], new_state[new_x][new_y] = new_state[new_x][new_y], new_state[blank_x][blank_y]
+            neighbors.append(new_state)
+    return neighbors
+
+# Function to solve the 8-puzzle using Manhattan distance
+def solve_8_puzzle(initial_state, goal_state):
+    current_state = initial_state
+    visited = set()
+    path = [deepcopy(initial_state)]
+    manhattan_distances = [manhattan_distance(current_state, sum(goal_state, []))]
+
+    while current_state != goal_state:
+        visited.add(tuple(map(tuple, current_state)))
+        neighbors = generate_neighbors(current_state)
+
+        min_distance = float('inf')
+        next_state = None
+
+        for neighbor in neighbors:
+            if tuple(map(tuple, neighbor)) not in visited:
+                distance = manhattan_distance(neighbor, sum(goal_state, []))
+                if distance < min_distance:
+                    min_distance = distance
+                    next_state = neighbor
+
+        if next_state is None:  # No valid moves, unsolvable
+            return "No solution"
+
+        path.append(deepcopy(next_state))
+        manhattan_distances.append(manhattan_distance(next_state, sum(goal_state, [])))
+        current_state = next_state
+
+    return path, manhattan_distances
+
+# Initial and goal states
+initial_state = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [0, 7, 8]
+]
+
+goal_state = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 0]
+]
+
+# Solve the puzzle
+solution = solve_8_puzzle(initial_state, goal_state)
+
+# Print the solution path and Manhattan distances
+if solution == "No solution":
+    print("The puzzle is unsolvable.")
+else:
+    path, manhattan_distances = solution
+    print("Solution path:")
+    for step, state in enumerate(path):
+        print(f"Step {step}:")
+        for row in state:
+            print(row)
+        print(f"Manhattan distance: {manhattan_distances[step]}")
+        print()
+
